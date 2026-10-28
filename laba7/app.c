@@ -81,7 +81,6 @@ char **countLetters(char **letters, unsigned short size, unsigned char howMany)
         if(counted[i] == NULL)
         {
             free(counted);
-            counted = NULL;
 
             return 0;
         }
@@ -136,29 +135,38 @@ char **countLetters(char **letters, unsigned short size, unsigned char howMany)
 
 int main()
 {
-    char text[] = "the quick brown fox jumps over the lazy dog";
+    char text[] = "the quick brown fox jumps over the lazy dogaaaaa";
     unsigned short size = strlen(text);
 
     char **letters = countSymbols(text, size);
 
-    char **counted = countLetters(letters, size, 5);
+    char **counted = countLetters(letters, size, 3);
     /*
     for(unsigned char i = 0; i < size; i++)
     {
         printf("letters[%d][0]: %c %d\n", i, letters[i][0], letters[i][1]);
     }
     */
-    for(unsigned char i = 0; i < 5; i++)
+    for(unsigned char i = 0; i < 3; i++)
     {
         printf("counted[%d][0]: %c %d\n", i, counted[i][0], counted[i][1]);
     }
     
 
-    for(unsigned char i = 0; i < 3; i++)
+    for(unsigned char i = 0; i < size; i++)
     {
         free(letters[i]);
         letters[i] = NULL;
     }
+
+    for(unsigned char i = 0; i < 3; i++)
+    {
+        free(counted[i]);
+        counted[i] = NULL;
+    }
+
+    free(counted);
+    counted = NULL;
 
     free(letters);
     letters = NULL;

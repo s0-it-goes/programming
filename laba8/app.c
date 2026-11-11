@@ -1,6 +1,8 @@
 #include <stdio.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <time.h>
+
 
 #define SIZE 4
 
@@ -52,6 +54,32 @@ void changeMatrix(unsigned short **matrix, unsigned char size, unsigned char mov
     }
 }
 
+void moveLeft(unsigned short **matrix, unsigned char size)
+{
+    short zeroIndex = -1;
+    for(unsigned char i = 0; i < size; i++)
+    {
+        for(unsigned char j = 0; j < size; j++)
+        {
+            if(matrix[i][j] == 0 && zeroIndex == -1)
+                zeroIndex = j;
+            
+            if(matrix[i][j] != 0 && zeroIndex >= 0)
+            {
+                matrix[i][zeroIndex] = matrix[i][j];
+                matrix[i][j] = 0;
+                zeroIndex += 1; // по шагам: 2 0 4 2 -> 2 4 0 2 -> 2 4 2 0, т.е по сути надо найти первый ноль, 
+                                // а потом добавлять +1 к нему при сдвиге
+            }
+        }
+        zeroIndex = -1;
+    }
+}
+
+void mergeSimilar()
+{
+
+}
 
 int main()
 {
@@ -59,6 +87,7 @@ int main()
     srand(time(NULL));
     
     unsigned short **matrix = startMatrix(SIZE);
+    
 
     for(unsigned char i = 0; i < SIZE; i++)
     {     
@@ -68,6 +97,19 @@ int main()
         }
         printf("\n");
     }
+
+    printf("\n");
+    moveLeft(matrix, SIZE);
+
+    for(unsigned char i = 0; i < SIZE; i++)
+    {     
+        for(unsigned char j = 0; j < SIZE; j++)
+        {
+            printf("%d ", matrix[i][j]);
+        }
+        printf("\n");
+    }
+
 
 
     for(unsigned char i = 0; i < SIZE; i++)

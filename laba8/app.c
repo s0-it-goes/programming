@@ -2,8 +2,26 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <time.h>
+#include <stdbool.h>
 
-#define SIZE 4
+#define SIZE 2
+
+void spawnNew(unsigned short **matrix, unsigned char size)
+{
+    while(true)
+    {
+        unsigned char line  = (rand() % size); 
+        unsigned char col   = (rand() % size);
+        
+        if(matrix[line][col] != 0){ 
+            // проверка на случай, если на рандомно выбранной ячейке уже есть число
+            continue;
+        }
+
+        matrix[line][col] = 2;
+        return;
+    }
+}
 
 unsigned short **startMatrix(unsigned char size)
 {
@@ -21,54 +39,31 @@ unsigned short **startMatrix(unsigned char size)
 
     for(unsigned char i = 0; i < 2; i++)
     {
-        unsigned char line  = (rand() % size); 
-        unsigned char col   = (rand() % size);
-        
-        if(matrix[line][col] != 0){ 
-            // проверка на случай, если выпадут два одинаковых элемента - будет повторяться, пока второй не выпадет отличным от первого
-            i--;
-            continue;
-        }
-
-        matrix[line][col] = 2;
+        spawnNew(matrix, size);
     }
 
     return matrix;
 }
 
-
-
-void mergeSimilar(unsigned short **matrix, unsigned char size)
+void showMatrix(unsigned short **matrix, unsigned char size)
 {
     for(unsigned char i = 0; i < size; i++)
-    {
-        for(unsigned char j = 0; j < size - 1; j++)
+    {     
+        for(unsigned char j = 0; j < size; j++)
         {
-            if (matrix[i][j] == matrix[i][j+1])
-            {
-                matrix[i][j] *= 2;
-                matrix[i][j+1] = 0;
-            }
+            printf("%4d ", matrix[i][j]);
         }
+        printf("\n");
     }
 }
 
-void spawnNew(unsigned short **matrix, unsigned char size)
+void freeMatrix(unsigned short **matrix, unsigned char size)
 {
-    bool flag = true;
-    while(flag)
+    for(unsigned char i = 0; i < size; i++)
     {
-        unsigned char line  = (rand() % size); 
-        unsigned char col   = (rand() % size);
-        
-        if(matrix[line][col] != 0){ 
-            // проверка на случай, если на рандомно выбранной ячейке уже есть число
-            continue;
-        }
-
-        matrix[line][col] = 2;
-        flag = false;
+        free(matrix[i]);
     }
+    free(matrix);
 }
 
 void reflectMatrix(unsigned short **matrix, unsigned char size)
@@ -101,7 +96,23 @@ void transposeMatrix(unsigned short **matrix, unsigned char size)
     }
 }
 
-void moveLeft(unsigned short **matrix, unsigned char size)
+
+void mergeSimilar(unsigned short **matrix, unsigned char size)
+{
+    for(unsigned char i = 0; i < size; i++)
+    {
+        for(unsigned char j = 0; j < size - 1; j++)
+        {
+            if (matrix[i][j] == matrix[i][j+1])
+            {
+                matrix[i][j] *= 2;
+                matrix[i][j+1] = 0;
+            }
+        }
+    }
+}
+
+void move(unsigned short **matrix, unsigned char size)
 {
     short zeroIndex = -1;
     for(unsigned char i = 0; i < size; i++)
@@ -123,6 +134,13 @@ void moveLeft(unsigned short **matrix, unsigned char size)
     }
 }
 
+void moveLeft(unsigned short **matrix, unsigned char size)
+{
+    move(matrix, size);
+    mergeSimilar(matrix, size);
+    move(matrix, size);
+}
+
 void moveRight(unsigned short **matrix, unsigned char size)
 {
     reflectMatrix(matrix, size);
@@ -139,7 +157,6 @@ void moveUp(unsigned short **matrix, unsigned char size)
 
 void moveDown(unsigned short **matrix, unsigned char size)
 {
-    
     transposeMatrix(matrix, size);
     reflectMatrix(matrix, size);
     moveLeft(matrix, size);
@@ -147,34 +164,114 @@ void moveDown(unsigned short **matrix, unsigned char size)
     transposeMatrix(matrix, size);
 }
 
-void showMatrix(unsigned short **matrix, unsigned char size)
+unsigned short **copyMatrix(unsigned short **matrix, unsigned char size)
 {
-    for(unsigned char i = 0; i < SIZE; i++)
-    {     
-        for(unsigned char j = 0; j < SIZE; j++)
+
+    unsigned short **copy = malloc(size * sizeof(*copy));
+
+    for(unsigned char i = 0; i < size; i++)
+    {
+        copy[i] = malloc(size * sizeof(*copy[i]));
+        
+        for(unsigned char j = 0; j < size; j++)
         {
-            printf("%d ", matrix[i][j]);
+            copy[i][j] = matrix[i][j];
         }
-        printf("\n");
     }
+
+    return copy;
+}
+
+bool compareMatrix(unsigned short **matrix1, unsigned short **matrix2, unsigned char size)
+{
+    for(unsigned char i = 0; i < size; i++)
+    {
+        for(unsigned char j = 0; j < size; j++)
+        {
+            if(matrix1[i][j] != matrix2[i][j])
+                return false;
+        }
+    }
+
+    return true;
+}
+
+bool anyMoves(unsigned short **matrix, unsigned char size)
+{
+    unsigned short **copy = copyMatrix(matrix, size);
+
+    moveLeft(copy, size);
+    if(!compareMatrix(matrix, copy, size))
+    {
+        freeMatrix(copy, size);
+        return true;
+    }
+
+    freeMatrix(copy, size);
+    copy = copyMatrix(matrix, size);
+
+    moveRight(copy, size);
+    if(!compareMatrix(matrix, copy, size))
+    {
+        freeMatrix(copy, size);
+        return true;
+    }
+    
+    freeMatrix(copy, size);
+    copy = copyMatrix(matrix, size);
+
+    moveUp(copy, size);
+    if(!compareMatrix(matrix, copy, size))
+    {
+        freeMatrix(copy, size);
+        return true;
+    }
+
+    freeMatrix(copy, size);
+    copy = copyMatrix(matrix, size);
+
+    moveDown(copy, size);
+    if(!compareMatrix(matrix, copy, size))
+    {
+        freeMatrix(copy, size);
+        return true;
+    }
+
+    freeMatrix(copy, size);
+
+    return false; // нет доступных ходов
+
 }
 
 void play(unsigned short **matrix, unsigned char size, unsigned char move)
 {
-    printf("\033[H\033[J");
+    unsigned short **copy = copyMatrix(matrix, size);
+    
     switch(toupper(move))
     {
         case 'W':
+            moveUp(matrix, size);
             break;
         case 'A':
+            moveLeft(matrix, size);
             break;
         case 'S':
+            moveDown(matrix, size);
             break;
         case 'D':
+            moveRight(matrix, size);
             break;
         default:
             break;
     }
+
+    if(!compareMatrix(matrix, copy, size))
+        spawnNew(matrix, SIZE);
+    
+    printf("\033[H\033[J");
+    showMatrix(matrix, size);
+
+    freeMatrix(copy, size);
 }
 
 int main()
@@ -183,30 +280,29 @@ int main()
     srand(time(NULL));
     
     unsigned short **matrix = startMatrix(SIZE);
-    
 
-    for(unsigned char i = 0; i < SIZE; i++)
-    {     
-        for(unsigned char j = 0; j < SIZE; j++)
-        {
-            printf("%d ", matrix[i][j]);
-        }
-        printf("\n");
-    }
-
-    printf("\n");
+    printf("\033[H\033[J");
     showMatrix(matrix, SIZE);
-    
 
-    
-    
-
-    for(unsigned char i = 0; i < SIZE; i++)
+    unsigned char c = 0;
+    while(true)
     {
-        free(matrix[i]);
+        scanf(" %c", &c); // пробел перед %c нужен, чтобы пропускать все пробельные символы после ввода символа
+        play(matrix, SIZE, c);
+
+        if(toupper(c) == 'Q')
+        {
+            break;
+        }
+
+        if(!anyMoves(matrix, SIZE))
+        {
+            printf("GAME OVER\n");
+            break;
+        }
     }
-    
-    free(matrix);
+
+    freeMatrix(matrix, SIZE);
 
     return 0;
 }

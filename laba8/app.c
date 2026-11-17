@@ -4,7 +4,7 @@
 #include <time.h>
 #include <stdbool.h>
 
-#define SIZE 2
+#define SIZE 4
 
 void spawnNew(unsigned short **matrix, unsigned char size)
 {
@@ -45,7 +45,7 @@ unsigned short **startMatrix(unsigned char size)
     return matrix;
 }
 
-void showMatrix(unsigned short **matrix, unsigned char size)
+void showMatrix(unsigned short **matrix, unsigned char size, unsigned int score)
 {
     for(unsigned char i = 0; i < size; i++)
     {     
@@ -55,6 +55,7 @@ void showMatrix(unsigned short **matrix, unsigned char size)
         }
         printf("\n");
     }
+    printf("\nscore: %d\n", score);
 }
 
 void freeMatrix(unsigned short **matrix, unsigned char size)
@@ -97,19 +98,24 @@ void transposeMatrix(unsigned short **matrix, unsigned char size)
 }
 
 
-void mergeSimilar(unsigned short **matrix, unsigned char size)
+unsigned int mergeSimilar(unsigned short **matrix, unsigned char size)
 {
+    unsigned int score = 0;
     for(unsigned char i = 0; i < size; i++)
     {
         for(unsigned char j = 0; j < size - 1; j++)
         {
-            if (matrix[i][j] == matrix[i][j+1])
+            if (matrix[i][j] != 0 && matrix[i][j] == matrix[i][j+1])
             {
                 matrix[i][j] *= 2;
                 matrix[i][j+1] = 0;
+                
+                score += matrix[i][j];
             }
         }
     }
+
+    return score;
 }
 
 void move(unsigned short **matrix, unsigned char size)
@@ -134,34 +140,42 @@ void move(unsigned short **matrix, unsigned char size)
     }
 }
 
-void moveLeft(unsigned short **matrix, unsigned char size)
+unsigned int moveLeft(unsigned short **matrix, unsigned char size)
 {
     move(matrix, size);
-    mergeSimilar(matrix, size);
+    unsigned int score = mergeSimilar(matrix, size);
     move(matrix, size);
+
+    return score;
 }
 
-void moveRight(unsigned short **matrix, unsigned char size)
+unsigned int moveRight(unsigned short **matrix, unsigned char size)
 {
     reflectMatrix(matrix, size);
-    moveLeft(matrix, size);
+    unsigned int score = moveLeft(matrix, size);
     reflectMatrix(matrix, size);
+
+    return score;
 }
 
-void moveUp(unsigned short **matrix, unsigned char size)
+unsigned int moveUp(unsigned short **matrix, unsigned char size)
 {
     transposeMatrix(matrix, size);
-    moveLeft(matrix, size);
+    unsigned int score = moveLeft(matrix, size);
     transposeMatrix(matrix, size);
+
+    return score;
 }
 
-void moveDown(unsigned short **matrix, unsigned char size)
+unsigned int moveDown(unsigned short **matrix, unsigned char size)
 {
     transposeMatrix(matrix, size);
     reflectMatrix(matrix, size);
-    moveLeft(matrix, size);
+    unsigned int score = moveLeft(matrix, size);
     reflectMatrix(matrix, size);
     transposeMatrix(matrix, size);
+    
+    return score;
 }
 
 unsigned short **copyMatrix(unsigned short **matrix, unsigned char size)
@@ -242,36 +256,81 @@ bool anyMoves(unsigned short **matrix, unsigned char size)
     return false; // нет доступных ходов
 
 }
+/*
+bool isWin(unsigned short **matrix, unsigned char size)
+{
+    for (unsigned char i = 0; i < size; i++)
+    {
+        for (unsigned char j = 0; j < size; j++)
+        {
+            if (matrix[i][j] == 2048)
+            {
+                return true;
+            }
+        }
+    }
 
-void play(unsigned short **matrix, unsigned char size, unsigned char move)
+    return false;
+}
+*/
+
+void addToHistory(unsigned short **matrix, unsigned char size, unsigned int score, unsigned short ****history, unsigned int **scores, unsigned short mem)
+{
+    *history = realloc(*history, mem * sizeof(**history));
+    *scores = realloc(*scores, mem * sizeof(**scores));
+
+    (*history)[mem-1] = copyMatrix(matrix, size);
+    (*scores)[mem-1] = score;
+}
+
+void undo(unsigned short ***matrix, unsigned char size, unsigned int *score, unsigned short ***history, unsigned int *scores, unsigned short *mem)
+{
+    if((*mem) <= 1)
+        return;
+
+    freeMatrix(*matrix, size);
+    freeMatrix(history[(*mem)-1], size);
+    (*mem)--;
+
+    *matrix = copyMatrix((history)[(*mem)-1], size);
+
+    *score = scores[(*mem)-1];
+}
+
+void play(unsigned short **matrix, unsigned char size, unsigned char move, unsigned int *score, unsigned short ****history, unsigned int **scores, unsigned short *mem)
 {
     unsigned short **copy = copyMatrix(matrix, size);
     
     switch(toupper(move))
     {
         case 'W':
-            moveUp(matrix, size);
+            *score += moveUp(matrix, size);
             break;
         case 'A':
-            moveLeft(matrix, size);
+            *score += moveLeft(matrix, size);
             break;
         case 'S':
-            moveDown(matrix, size);
+            *score += moveDown(matrix, size);
             break;
         case 'D':
-            moveRight(matrix, size);
+            *score += moveRight(matrix, size);
             break;
         default:
             break;
     }
 
     if(!compareMatrix(matrix, copy, size))
-        spawnNew(matrix, SIZE);
+    {
+        spawnNew(matrix, size);
+        (*mem)++;
+        addToHistory(matrix, size, *score, history, scores, *mem);
+    }
     
     printf("\033[H\033[J");
-    showMatrix(matrix, size);
+    showMatrix(matrix, size, *score);
 
     freeMatrix(copy, size);
+    
 }
 
 int main()
@@ -281,19 +340,39 @@ int main()
     
     unsigned short **matrix = startMatrix(SIZE);
 
-    printf("\033[H\033[J");
-    showMatrix(matrix, SIZE);
+    unsigned short ***history = NULL;
+    unsigned int *scores = NULL;
+    unsigned short mem = 1;
 
+    unsigned int score = 0;
     unsigned char c = 0;
+
+    addToHistory(matrix, SIZE, score, &history, &scores, mem);
+
+    printf("\033[H\033[J");
+    showMatrix(matrix, SIZE, 0);
+
+
     while(true)
     {
         scanf(" %c", &c); // пробел перед %c нужен, чтобы пропускать все пробельные символы после ввода символа
-        play(matrix, SIZE, c);
 
         if(toupper(c) == 'Q')
         {
             break;
         }
+
+        if (toupper(c) == 'B')
+        {
+            undo(&matrix, SIZE, &score, history, scores, &mem);
+            printf("\033[H\033[J");
+            showMatrix(matrix, SIZE, score);
+            continue;
+        }
+
+        play(matrix, SIZE, c, &score, &history, &scores, &mem);
+
+        
 
         if(!anyMoves(matrix, SIZE))
         {
@@ -302,6 +381,11 @@ int main()
         }
     }
 
+    for (unsigned short i = 0; i < mem; i++)
+        freeMatrix(history[i], SIZE);
+
+    free(history);
+    free(scores);
     freeMatrix(matrix, SIZE);
 
     return 0;

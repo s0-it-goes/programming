@@ -1,10 +1,8 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-#include <stdlib.h>
 #include <time.h>
 #include <stdbool.h>
-
-#define SIZE 4
 
 void spawnNew(unsigned short **matrix, unsigned char size)
 {
@@ -333,12 +331,14 @@ void play(unsigned short **matrix, unsigned char size, unsigned char move, unsig
     
 }
 
-int main()
+int main(int argc, char *argv[])
 {
     //  выбираю два изначальных положения двоек.
     srand(time(NULL));
     
-    unsigned short **matrix = startMatrix(SIZE);
+    unsigned char size = (unsigned char) atoi(argv[1]);
+
+    unsigned short **matrix = startMatrix(size);
 
     unsigned short ***history = NULL;
     unsigned int *scores = NULL;
@@ -346,12 +346,11 @@ int main()
 
     unsigned int score = 0;
     unsigned char c = 0;
-
-    addToHistory(matrix, SIZE, score, &history, &scores, mem);
+    
+    addToHistory(matrix, size, score, &history, &scores, mem);
 
     printf("\033[H\033[J");
-    showMatrix(matrix, SIZE, 0);
-
+    showMatrix(matrix, size, 0);
 
     while(true)
     {
@@ -364,17 +363,16 @@ int main()
 
         if (toupper(c) == 'B')
         {
-            undo(&matrix, SIZE, &score, history, scores, &mem);
+            undo(&matrix, size, &score, history, scores, &mem);
             printf("\033[H\033[J");
-            showMatrix(matrix, SIZE, score);
+            showMatrix(matrix, size, score);
             continue;
         }
 
-        play(matrix, SIZE, c, &score, &history, &scores, &mem);
+        play(matrix, size, c, &score, &history, &scores, &mem);
 
-        
 
-        if(!anyMoves(matrix, SIZE))
+        if(!anyMoves(matrix, size))
         {
             printf("GAME OVER\n");
             break;
@@ -382,11 +380,11 @@ int main()
     }
 
     for (unsigned short i = 0; i < mem; i++)
-        freeMatrix(history[i], SIZE);
+        freeMatrix(history[i], size);
 
     free(history);
     free(scores);
-    freeMatrix(matrix, SIZE);
+    freeMatrix(matrix, size);
 
     return 0;
 }

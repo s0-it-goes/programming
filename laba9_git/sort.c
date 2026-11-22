@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 void bubble_sort(int arr[], int n) {
     for (int i = 0; i < n - 1; i++) {
         int swapped = 0;
@@ -16,3 +18,11 @@ void bubble_sort(int arr[], int n) {
 }
 // комментарий с любым текстом в sort.c
 // ещё один комментарий
+
+int main()
+{
+    int a[] = {4, 2};
+    bubble_sort(a, 2);
+
+    return 0;
+}

@@ -14,3 +14,4 @@ void bubble_sort(int arr[], int n) {
         }
     }
 }
+// комментарий с любым текстом в sort.c

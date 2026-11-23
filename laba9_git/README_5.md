@@ -100,3 +100,10 @@ git merge Mergesort-Impl
 ```
 git push
 ```
+
+### 12. Запушим документ с результатом работы
+```
+git add .
+git commit -m "отчёт 5"
+git push
+```  

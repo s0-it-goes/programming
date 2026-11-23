@@ -49,7 +49,7 @@ int main()
 ![alt text](./screens/4/9.png)  
 
 ### 10. git diff --staged:
-Здесь без изменений
+Здесь без изменений  
 ![alt text](./screens/4/10.png)  
 
 ### 11. Объяснения
@@ -159,12 +159,80 @@ int main()
     return 0;
 }
 ```  
-**Пропал printf**
+**Пропал printf**  
 
 ### 22. git status:
 ![alt text](./screens/4/22.png)  
 
 ### 23. Запушим ветку на удалённый репо:
 `git add .`  
-`git commit -m "commited"`
-`git push`
+`git commit -m "commited"`  
+`git push`  
+
+# Ветки и ff-merge
+
+### 1. greeting.txt  
+`touch greeting.txt`  
+`git add greeting.txt`  
+`git commit -m "Add file greeting.txt"`  
+
+### 2. Добавим hello в greeting.txt
+`echo "hello" >> greeting.txt`  
+`git add greeting.txt`  
+`git commit -m "Add content to greeting.txt"`  
+
+### 3. Создадим ветку feaute/uppercase  
+`git branch feature/uppercase`  
+
+### 4. Переключимся на новую ветку  
+`git switch feature/uppercase`  
+
+### 5. git status:  
+![alt text](./screens/4/b5.png)  
+
+### 6. Сделаем HELLO:
+`echo "HELLO" > greeting.txt`  
+
+### 7. Коммит:
+`git add greeting.txt`  
+`git commit -m "HELLO"`  
+
+### 8. git branch:  
+![alt text](./screens/4/b8.png)   
+**Показывает, что есть 3 ветки и мы находимся на ветке feature/uppercase**  
+
+### 9. git log --oneline --graph --all:  
+![alt text](./screens/4/b9.png)   
+
+### 10. Переключаемся на главную ветку  
+*Файл README_4.md временно кладу в стэш командной `git stash`*  
+`git switch main`  
+
+### 11. Содержимое файла
+![alt text](./screens/4/b11.png)   
+**Файла не существует в этой ветке, что логично, поскольку работали с ним мы в ветке feature/uppercase**
+
+### 12. Сравнение веток
+`git diff main feature/uppercase`  
+![alt text](./screens/4/b12.png)  
+**К сожалению, поместилось не все и не видно, что в различиях есть greeting.txt, его будет видно дальше при git merge**  
+
+### 13. Объединение веток
+`git merge main feature/uppercase`  
+![alt text](./screens/4/b13.png)  
+**Теперь видно, что при слиянии добавился файл greeting.txt**  
+
+### 14. Содержимое файла greeting.txt
+![alt text](./screens/4/b14.png)  
+
+### 15. Удаление ветки  
+![alt text](./screens/4/b15.png)  
+**Теперь осталась основная ветка main и созданная нами ранее ветка mybranch**  
+
+### 16. Сливаем ветки mybranch и main
+![alt text](./screens/4/b16.png)  
+**Логично, поскольку ранее мы уже слили ветку feature/uppercase с main, которая унаследовала изменения mybranch**
+
+### 17. Журнал изменений
+![alt text](./screens/4/b17.png)  
+**Отображается где мы отошли от основной ветки, и где вернулись на нее**

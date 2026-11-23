@@ -72,8 +72,8 @@ int main()
 `git commit -m "indexed"`  
 
 ### 16. Журнал:
-![alt text](./screens/4/16.png)
-**В журнале появился коммит**
+![alt text](./screens/4/16.png)  
+**В журнале появился коммит**  
 
 ### 17. Добавим printf в sort.c:
 ```

@@ -9,4 +9,7 @@
 ### [Практическое 7. Строки](./laba7/)
 ### [Практическое 8. Динамическая память (игра 2048)](./laba8/)
 ### [Практическое 9. Git](./laba9_git/)
+
 <img src="./img/vin_diesel.jpg">  
+
+<span style="font-size:20px">Гитхаб моего друга Романа: </span>[<span style="color: purple; font-size:20px">Роман</span>](https://github.com/sssroma/C-programming)
